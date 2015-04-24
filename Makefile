@@ -4,15 +4,17 @@ all: split
 images:$(addprefix testImage/,$(images_names))
 .PHONY: clean test
 
-BINS=split tests/createBlankImage
-OBJ:=split.o lib/fillwithblack.o lib/manppm.o
+BINS=split calibrate tests/createBlankImage
+COMMONOBJ:=lib/fillwithblack.o lib/manppm.o
+OBJ:=SplitByCalibration.o CalibrateByColor.o $(COMMONOBJ)
 EXTRACFLAGS=
 CFLAGS=-Wall $(EXTRACFLAGS)
 
 $(BINS):
 	$(CC) $(CFLAGS) -lm -o $@ $^
 
-split: $(OBJ)
+split: SplitByCalibration.o $(COMMONOBJ)
+calibrate: CalibrateByColor.o $(COMMONOBJ)
 tests/createBlankImage: tests/createBlankImage.o lib/fillwithblack.o lib/manppm.o
 
 
