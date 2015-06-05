@@ -1,3 +1,5 @@
 split
 .*.swp
 *.o
+*.jpg
+*.png
