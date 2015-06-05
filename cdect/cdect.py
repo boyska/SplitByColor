@@ -58,15 +58,14 @@ def main(args):
         cv2.destroyAllWindows()
     cv2.destroyAllWindows()
     circles = get_circles(gray, args)
-    if args.coordinates:
-        with open(args.coordinates, 'w') as buf:
-            for c in circles[0]:
-                p1, p2, r = c
-                buf.write('%d\t%d\n' % (p1, p2))
+    if args.coordinates is not None:
+        for c in circles[0]:
+            p1, p2, r = c
+            args.coordinates.write('%d\t%d\n' % (p1, p2))
 
     if args.show_result:
         highlight(img, circles, args)
-        cv2.imshow('detected circles',img)
+        cv2.imshow('detected circles', img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -81,7 +80,7 @@ def get_parser():
                       'will occur')
 
     col = p.add_argument_group('color filtering',
-                               description="HSV is expressed on the 0-255 range")
+                               description="HSV is expressed on the 0-255 range; 120 is blue, 180 is red")
     col.add_argument('--hue', metavar='PX', default=60, type=int, help="Default: 60 (green)")
     col.add_argument('--hue-radius', metavar='PX', default=10, type=int, help="Default: 10")
     col.add_argument('--min-saturation', metavar='S', default=150, type=int, help="Default: 150")
@@ -89,12 +88,14 @@ def get_parser():
     col.add_argument('--max-value', metavar='V', default=255, type=int, help="Default: 255")
 
     det = p.add_argument_group('circle detection')
-    det.add_argument('--param2', default=20, type=int, help='If it is lower, it will have more false positives')
+    det.add_argument('--param2', default=20, type=int, help='If it is lower, it will have more false positives [20]')
     det.add_argument('--min-dist', metavar='PX', default=100, type=int, help='Minimum distance between circles [100]')
     det.add_argument('--min-radius', metavar='PX', default=0, type=int)
     det.add_argument('--max-radius', metavar='PX', default=0, type=int)
 
-    p.add_argument('--coordinates', metavar='FILE', help='Write found coordinates to FILE')
+    p.add_argument('--coordinates', metavar='FILE',
+                   type=argparse.FileType('w'),
+                   help='Write found coordinates to FILE')
     p.add_argument('--show-result', action='store_true', default=False,
                    help='Show image with found circles')
     p.add_argument('--debug-steps', action='store_true', default=False,
