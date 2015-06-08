@@ -76,7 +76,10 @@ def main(args):
 
 def get_parser():
     import argparse
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(
+        description='recognize special points in an image',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     p.add_argument('image')
 
     proc = p.add_argument_group('preprocessing')
@@ -87,23 +90,23 @@ def get_parser():
     col = p.add_argument_group('color filtering',
                                description="HSV is on the 0-255 range;"
                                " 120 is blue, 180 is red")
-    col.add_argument('--hue', metavar='PX', default=60, type=int,
+    col.add_argument('--hue', metavar='HUECENTER', default=60, type=int,
                      help="Default: 60 (green)")
-    col.add_argument('--hue-radius', metavar='PX', default=10, type=int,
-                     help="Default: 10")
+    col.add_argument('--hue-radius', metavar='HUERADIUS', default=10, type=int,
+                     help=u"Will accept colors with "
+                     u"hue=HUECENTER\u00B1HUERADIUS")
     col.add_argument('--min-saturation', metavar='S', default=150, type=int,
-                     help="Default: 150")
+                     help="Minimum accepted saturation")
     col.add_argument('--min-value', metavar='V', default=150, type=int,
-                     help="Default: 150")
+                     help="Minimum accepted value")
     col.add_argument('--max-value', metavar='V', default=255, type=int,
-                     help="Default: 255")
+                     help="Maximum accepted value")
 
     det = p.add_argument_group('circle detection')
     det.add_argument('--param2', default=20, type=int,
-                     help='If it is lower, it will have more false positives'
-                     ' [20]')
+                     help='If it is lower, it will have more false positives')
     det.add_argument('--min-dist', metavar='PX', default=100, type=int,
-                     help='Minimum distance between circles [100]')
+                     help='Minimum distance between circles')
     det.add_argument('--min-radius', metavar='PX', default=0, type=int)
     det.add_argument('--max-radius', metavar='PX', default=0, type=int)
 
