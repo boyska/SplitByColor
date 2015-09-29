@@ -105,10 +105,10 @@ def get_parser():
     det = p.add_argument_group('circle detection')
     det.add_argument('--param2', default=20, type=int,
                      help='If it is lower, it will have more false positives')
-    det.add_argument('--min-dist', metavar='PX', default=100, type=int,
+    det.add_argument('--min-dist', metavar='PX', default='100',
                      help='Minimum distance between circles')
-    det.add_argument('--min-radius', metavar='PX', default=0, type=int)
-    det.add_argument('--max-radius', metavar='PX', default=0, type=int)
+    det.add_argument('--min-radius', metavar='PX', default='0')
+    det.add_argument('--max-radius', metavar='PX', default='0')
 
     p.add_argument('--coordinates', metavar='FILE',
                    type=argparse.FileType('w'),
@@ -120,5 +120,20 @@ def get_parser():
 
     return p
 
+
+def get_args():
+    args = get_parser().parse_args()
+    img = cv2.imread(args.image)
+    height, width, channels = img.shape
+    for attr in ('min_dist', 'min_radius', 'max_radius'):
+        value = getattr(args, attr)
+        if value.endswith('%'):
+            value = width * float(value[:-1]) / 100.0
+        else:
+            value = float(value)
+        print(attr, value)
+        setattr(args, attr, int(value))
+    return args
+
 if __name__ == '__main__':
-    main(get_parser().parse_args())
+    main(get_args())
