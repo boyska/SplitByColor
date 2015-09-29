@@ -17,7 +17,7 @@ def get_circles(img, args):
 
 
 def highlight(img, circles, args):
-    for i in circles[0, :]:
+    for i in circles[0]:
         # draw the outer circle
         cv2.circle(img, (i[0], i[1]), i[2], (255, 255, 0), 2)
         # draw the center of the circle
@@ -27,6 +27,9 @@ def highlight(img, circles, args):
 
 def main(args):
     img = cv2.imread(args.image)
+    height, width, channels = img.shape
+    img = img[args.cut_top:(height - args.cut_bottom),
+              args.cut_left:(width - args.cut_right)]
     cimg = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     if args.debug_steps:
         cv2.imshow('original (hsv)', cv2.cvtColor(cimg, cv2.COLOR_HSV2BGR))
@@ -65,7 +68,8 @@ def main(args):
     if args.coordinates is not None:
         for c in circles[0]:
             p1, p2, r = c
-            args.coordinates.write('%d\t%d\n' % (p1, p2))
+            args.coordinates.write('%d\t%d\n' % (p1+int(args.cut_left),
+                                                 p2+int(args.cut_top)))
 
     if args.show_result:
         highlight(img, circles, args)
@@ -83,6 +87,10 @@ def get_parser():
     p.add_argument('image')
 
     proc = p.add_argument_group('preprocessing')
+    proc.add_argument('--cut-left', metavar='PX', default='0')
+    proc.add_argument('--cut-right', metavar='PX', default='0')
+    proc.add_argument('--cut-top', metavar='PX', default='0')
+    proc.add_argument('--cut-bottom', metavar='PX', default='0')
     proc.add_argument('--blur', metavar='RADIUS', type=int,
                       help='It must be an odd number. If omitted, no blurring '
                       'will occur')
@@ -125,7 +133,8 @@ def get_args():
     args = get_parser().parse_args()
     img = cv2.imread(args.image)
     height, width, channels = img.shape
-    for attr in ('min_dist', 'min_radius', 'max_radius'):
+    for attr in ('min_dist', 'min_radius', 'max_radius',
+                 'cut_left', 'cut_right', 'cut_top', 'cut_bottom'):
         value = getattr(args, attr)
         if value.endswith('%'):
             value = width * float(value[:-1]) / 100.0
