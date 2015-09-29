@@ -140,7 +140,6 @@ def get_args():
             value = width * float(value[:-1]) / 100.0
         else:
             value = float(value)
-        print(attr, value)
         setattr(args, attr, int(value))
     return args
 
