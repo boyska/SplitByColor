@@ -104,7 +104,7 @@ def get_parser():
                      help="Default: 60 (green)")
     col.add_argument('--hue-radius', metavar='HUERADIUS', default=10, type=int,
                      help=u"Will accept colors with "
-                     u"hue=HUECENTER\u00B1HUERADIUS")
+                     u"hue=HUECENTER\u00B1HUERADIUS".encode('utf-8'))
     col.add_argument('--min-saturation', metavar='S', default=150, type=int,
                      help="Minimum accepted saturation")
     col.add_argument('--min-value', metavar='V', default=150, type=int,
