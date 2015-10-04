@@ -7,6 +7,7 @@ import cv2
 
 Point = namedtuple('Point', ('x', 'y'))
 
+
 def show_exit(im):
     cv2.imshow('test', im)
     cv2.waitKey()
@@ -21,7 +22,7 @@ def split_image(coord_buf, img):
     # note that axes are inverted: x = alpha * y
     alpha, b, c = get_cut_params(p1, p2, height)
 
-    left_poly = [(0,0), (b, 0), (c, height), (0, height)]
+    left_poly = [(0, 0), (b, 0), (c, height), (0, height)]
     right_poly = [(b, 0), (width, 0), (width, height), (c, height)]
     only_right = blackened(img, left_poly)
     only_left = blackened(img, right_poly)
@@ -30,9 +31,11 @@ def split_image(coord_buf, img):
     only_right = crop(only_right, min(b, c), width)
     return only_left, only_right
 
+
 def crop(img, from_, to):
     '''crop by width'''
     return img[0:img.shape[0], from_:to]
+
 
 def get_cut_params(p1, p2, img_height):
     alpha = float(p1.x-p2.x)/(p1.y-p2.y)
@@ -42,12 +45,14 @@ def get_cut_params(p1, p2, img_height):
     print(alpha, b, c)
     return (alpha, b, c)
 
+
 def blackened(im, poly_to_blacken):
     bg = [0] * 3
     mask = np.full(im.shape, 255, dtype=np.uint8)
-    roi = np.array([poly_to_blacken],dtype=np.int32)
-    cv2.fillPoly(mask,roi,bg)
+    roi = np.array([poly_to_blacken], dtype=np.int32)
+    cv2.fillPoly(mask, roi, bg)
     return cv2.bitwise_and(im, mask)
+
 
 def get_parser():
     import argparse
@@ -58,7 +63,8 @@ def get_parser():
     p.add_argument('--show', action='store_true', default=False)
     return p
 
-if __name__ == '__main__':
+
+def main():
     args = get_parser().parse_args()
     img = cv2.imread(args.img_filename)
     left, right = split_image(args.cut_coordinates_filename, img)
@@ -73,4 +79,5 @@ if __name__ == '__main__':
         cv2.waitKey()
         cv2.destroyAllWindows()
 
-
+if __name__ == '__main__':
+    main()

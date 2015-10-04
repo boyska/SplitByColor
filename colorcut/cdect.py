@@ -25,7 +25,9 @@ def highlight(img, circles, args):
     return img
 
 
-def main(args):
+def main(args=None):
+    if args is None:
+        args = get_args()
     img = cv2.imread(args.image)
     height, width, channels = img.shape
     img = img[args.cut_top:(height - args.cut_bottom),
@@ -144,4 +146,4 @@ def get_args():
     return args
 
 if __name__ == '__main__':
-    main(get_args())
+    main()
