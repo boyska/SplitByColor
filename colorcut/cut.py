@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os.path
 from collections import namedtuple
-
 import numpy as np
 import cv2
 
@@ -13,7 +12,16 @@ def show_exit(im):
     cv2.waitKey()
     cv2.destroyAllWindows()
 
-
+def mask_import(mask_path):
+    dx_mask=np.load(mask_path+"/dx.npy")
+    sx_mask=np.load(mask_path+"/sx.npy")
+    return dx_mask, sx_mask
+    
+def cut_by_mask(mask,image):
+    only_left = cv2.bitwise_and(image, image, mask = mask[1])
+    only_right= cv2.bitwise_and(image, image, mask = mask[0])
+    return only_left, only_right
+    
 def split_image(coord_buf, img):
     data = coord_buf.read()
     p1 = Point(*map(int, data.split('\n')[0].split('\t')))
@@ -37,7 +45,7 @@ def crop(img, from_, to):
     return img[0:img.shape[0], from_:to]
 
 
-def get_cut_params(p1, p2, img_height):
+def  get_cut_params(p1, p2, img_height):
     alpha = float(p1.x-p2.x)/(p1.y-p2.y)
     b = p1.x - alpha * p1.y
     c = alpha * img_height + b
@@ -57,17 +65,25 @@ def blackened(im, poly_to_blacken):
 def get_parser():
     import argparse
     p = argparse.ArgumentParser('taglia taglia')
-    p.add_argument('cut_coordinates_filename', type=argparse.FileType('r'))
+    #p.add_argument('cut_coordinates_filename', type=argparse.FileType('r'))
     p.add_argument('img_filename')
     p.add_argument('--outfile')
     p.add_argument('--show', action='store_true', default=False)
+    p.add_argument("-m", "--mask", help = "path to the mask")
+    p.add_argument("-c", "--color", help = "path to the mask")
     return p
 
 
 def main():
     args = get_parser().parse_args()
     img = cv2.imread(args.img_filename)
-    left, right = split_image(args.cut_coordinates_filename, img)
+    #cut by color or spot
+    if not args.color:
+        left, right = split_image(args.cut_coordinates_filename, img)
+    else:
+        mask=mask_import(args.mask)
+        left, right = cut_by_mask(mask,img)
+    
     if args.outfile is not None:
         l_fname = '%s.L%s' % os.path.splitext(args.outfile)
         r_fname = '%s.R%s' % os.path.splitext(args.outfile)
