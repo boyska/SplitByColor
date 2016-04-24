@@ -1,5 +1,5 @@
 from __future__ import print_function
-import os.path
+import os.path,csv
 from collections import namedtuple
 import numpy as np
 import cv2
@@ -13,13 +13,16 @@ def show_exit(im):
     cv2.destroyAllWindows()
 
 def mask_import(mask_path):
-    dx_mask=np.load(mask_path+"/dx.npy")
-    sx_mask=np.load(mask_path+"/sx.npy")
-    return dx_mask, sx_mask
-    
+    mask=np.load(mask_path+"/mask.npy")
+#    sx_mask=np.load(mask_path+"/sx.npy")
+    return mask
+        
 def cut_by_mask(mask,image):
-    only_left = cv2.bitwise_and(image, image, mask = mask[1])
-    only_right= cv2.bitwise_and(image, image, mask = mask[0])
+    only_left = cv2.bitwise_and(image, image, mask = mask[0,:,:])
+    only_right= cv2.bitwise_and(image, image, mask = mask[1,:,:])
+    height, width, depth = image.shape
+    only_left = crop(only_left, 0, width)
+    only_right = crop(only_right,0, width)
     return only_left, only_right
     
 def split_image(coord_buf, img):
@@ -39,7 +42,19 @@ def split_image(coord_buf, img):
     only_right = crop(only_right, min(b, c), width)
     return only_left, only_right
 
-
+def crop_by_countours(image,side,mask_folder):
+    csvfile=open(mask_folder+"/countours"+side+'.csv', 'rb')
+    my_reader = csv.reader(csvfile, delimiter='\t')
+    my_list=list(my_reader)[0]
+    #for row in my_reader:
+    print (my_list)
+    cv2.imshow('mask',image)
+    cv2.waitKey()
+    image= image[int(my_list[0]):int(my_list[1]),\
+    int(my_list[2]):int(my_list[3])]
+    print(image.shape)
+    return image
+    
 def crop(img, from_, to):
     '''crop by width'''
     return img[0:img.shape[0], from_:to]
@@ -83,7 +98,9 @@ def main():
     else:
         mask=mask_import(args.mask)
         left, right = cut_by_mask(mask,img)
-    
+        left= crop_by_countours(left,"right",args.mask)
+        right= crop_by_countours(right,"left",args.mask)
+        
     if args.outfile is not None:
         l_fname = '%s.L%s' % os.path.splitext(args.outfile)
         r_fname = '%s.R%s' % os.path.splitext(args.outfile)
