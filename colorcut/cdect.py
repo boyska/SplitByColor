@@ -1,27 +1,33 @@
 import cv2
-import cv
 import numpy as np
 
 
-def get_circles(img, args):
-    # TODO: for param2 in range(args.max_param2, args.min_param2, -1)
-    circles = cv2.HoughCircles(img, cv.CV_HOUGH_GRADIENT, 1,
-                               args.min_dist,
-                               param2=args.param2,
-                               minRadius=args.min_radius,
-                               maxRadius=args.max_radius)
-    if circles is None:
-        raise Exception('error looking for circles')
+def get_centers(img, args):
+    copied = img.copy()
+    contours, hierarchy = cv2.findContours(copied, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if len(contours) != 2:
+        raise Exception('Error looking for contours')
+    moments = [cv2.moments(c) for c in contours]
+    centers = [(int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])) for M in moments]
+    if args.debug_steps:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        cv2.drawContours(img, contours, -1, (0, 255, 0), 1)
+        cv2.imshow('contours', img)
+        cv2.waitKey(0)
+    return centers
 
-    return circles
 
-
-def highlight(img, circles, args):
-    for i in circles[0]:
-        # draw the outer circle
-        cv2.circle(img, (i[0], i[1]), i[2], (255, 255, 0), 2)
-        # draw the center of the circle
-        cv2.circle(img, (i[0], i[1]), 2, (255, 0, 255), 3)
+def highlight(img, centers, args):
+# img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    h, w, channels = img.shape
+#  deltaX , delta Y
+    delta = [centers[1][0] - centers[0][0], centers[1][1] - centers[0][1]]
+    t = (np.array([0, h])-centers[0][1])/delta[1]  # ([immagine] - y1) / deltaY
+    x1, x2 = centers[0][0] + delta[0]*t  # x1 + deltaX*t
+    for c in centers:
+        cv2.circle(img, c, 3, (0, 255, 255), -1)
+    cv2.line(img, (x1, 0), (x2, h), (0, 255, 0), 1)
+    cv2.line(img, centers[0], centers[1], (0, 255, 0), 1)
     return img
 
 
@@ -66,15 +72,15 @@ def main(args=None):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     cv2.destroyAllWindows()
-    circles = get_circles(gray, args)
+    centers = get_centers(gray, args)
     if args.coordinates is not None:
-        for c in circles[0]:
-            p1, p2, r = c
+        for c in centers:
+            p1, p2 = c
             args.coordinates.write('%d\t%d\n' % (p1+int(args.cut_left),
                                                  p2+int(args.cut_top)))
 
     if args.show_result:
-        highlight(img, circles, args)
+        highlight(img, centers, args)
         cv2.imshow('detected circles', img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
